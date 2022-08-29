@@ -101,20 +101,20 @@
               :color="selectedEvent.color"
               dark
             >
-              <v-btn icon>
-                <v-icon>mdi-pencil</v-icon>
+              <v-btn @click="deleteEvent(selectedEvent.id)" icon>
+                <v-icon>mdi-delete</v-icon>
               </v-btn>
               <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
               <v-spacer></v-spacer>
-              <v-btn icon>
-                <v-icon>mdi-heart</v-icon>
-              </v-btn>
-              <v-btn icon>
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn>
             </v-toolbar>
             <v-card-text>
-              <span v-html="selectedEvent.details"></span>
+              <form v-if="currentlyEditing !== selectedEvent.id">
+                {{selectedEvent.details}}
+              </form>
+              <form v-else>
+                <textarea-autosize v-model="selectedEvent.details" type="text" style="width:100%" :min-height="100" placeholder="add note">
+                </textarea-autosize>
+              </form>
             </v-card-text>
             <v-card-actions>
               <v-btn
@@ -199,7 +199,14 @@
       async updateRange () {
         const calCollection = collection(db, 'calEvent');
         const snapshot = await getDocs(calCollection);
-        console.log(snapshot);
+        let events= [];
+        snapshot.forEach(doc => {
+          let appData = doc.data();
+          appData.id = doc.id;
+          console.log(appData);
+          events.push(appData);
+        });
+        this.events = events;
       },
     },
   }
