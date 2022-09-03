@@ -11,13 +11,14 @@ import Calendar from './components/Calendar';
 
 export default {
   name: 'App',
-
   components: {
     Calendar,
   },
-
   data: () => ({
     //
   }),
+  created () {
+    document.title = "Calendar@vue2";
+  }
 };
 </script>
