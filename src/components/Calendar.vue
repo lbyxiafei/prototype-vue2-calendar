@@ -122,7 +122,21 @@
                 color="secondary"
                 @click="selectedOpen = false"
               >
-                Cancel
+                Close
+              </v-btn>
+              <v-btn
+                text
+                v-if="currentlyEditing !== selectedEvent.id"
+                @click.prevent = "editEvent(selectedEvent)"
+              >
+                Edit
+              </v-btn>
+              <v-btn
+                text
+                v-else
+                @click.prevent = "updateEvent(selectedEvent)"
+              >
+                Save
               </v-btn>
             </v-card-actions>
           </v-card>
@@ -134,7 +148,7 @@
 
 <script>
   import { db } from '@/main';
-  import { collection, getDocs } from 'firebase/firestore';
+  import { collection, getDoc, getDocs, doc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 
   export default {
     data: () => ({
@@ -180,6 +194,24 @@
       next () {
         this.$refs.calendar.next()
       },
+      editEvent(event) {
+        this.currentlyEditing = event.id;
+      },
+      async updateEvent(event) {
+        const calCollection = collection(db, 'calEvent');
+        await updateDoc(doc(calCollection, this.currentlyEditing), {
+          details: event.details
+        });
+        this.selectedOpen = false;
+        this.selectedElement = null;
+      },
+      async deleteEvent(eventId) {
+        const calCollection = collection(db, 'calEvent');
+        await deleteDoc(doc(calCollection, eventId));
+        this.selectedOpen = false;
+        this.selectedElement = null;
+        await this.updateRange();
+      },
       showEvent ({ nativeEvent, event }) {
         const open = () => {
           this.selectedEvent = event
@@ -193,7 +225,6 @@
         } else {
           open()
         }
-
         nativeEvent.stopPropagation()
       },
       async updateRange () {
@@ -203,7 +234,6 @@
         snapshot.forEach(doc => {
           let appData = doc.data();
           appData.id = doc.id;
-          console.log(appData);
           events.push(appData);
         });
         this.events = events;
