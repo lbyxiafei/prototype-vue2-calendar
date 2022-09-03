@@ -6,6 +6,14 @@
           flat
         >
           <v-btn
+            dark
+            class="mr-4"
+            color="primary"
+            @click="dialog = true"
+          >
+            New Event
+          </v-btn>
+          <v-btn
             outlined
             class="mr-4"
             color="grey darken-2"
@@ -73,6 +81,25 @@
           </v-menu>
         </v-toolbar>
       </v-sheet>
+
+      <!-- Add New Event dialog -->
+      <v-dialog v-model="dialog" max-width="500">
+        <v-container>
+          <v-card>
+            <v-form @submit.prevent="addEvent" class="pa-4">
+              <v-text-field v-model="name" type="text" label="event name (required)"></v-text-field>
+              <v-text-field v-model="details" type="text" label="detail"></v-text-field>
+              <v-text-field v-model="start" type="date" label="start (required)"></v-text-field>
+              <v-text-field v-model="end" type="date" label="end (required)"></v-text-field>
+              <v-text-field v-model="color" type="color" label="color (click to open color menu)"></v-text-field>
+              <v-btn type="submit" color="primary" class="mr-4" @click.stop="dialog = false">
+                create event
+              </v-btn>
+            </v-form>
+          </v-card>
+        </v-container>
+      </v-dialog>
+
       <v-sheet height="600">
         <v-calendar
           ref="calendar"
@@ -148,7 +175,7 @@
 
 <script>
   import { db } from '@/main';
-  import { collection, getDoc, getDocs, doc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
+  import { collection, getDoc, getDocs, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 
   export default {
     data: () => ({
@@ -205,12 +232,30 @@
         this.selectedOpen = false;
         this.selectedElement = null;
       },
+      async addEvent() {
+        const calCollection = collection(db, 'calEvent');
+        await addDoc(calCollection, {
+          name: this.name,
+          details: this.details,
+          start: this.start,
+          end: this.end,
+          color: this.color
+        });
+        this.name = '';
+        this.details = '';
+        this.start = '';
+        this.end = '';
+        this.color = '#1976D2';
+        this.selectedOpen = false;
+        this.selectedElement = null;
+        this.updateRange();
+      },
       async deleteEvent(eventId) {
         const calCollection = collection(db, 'calEvent');
         await deleteDoc(doc(calCollection, eventId));
         this.selectedOpen = false;
         this.selectedElement = null;
-        await this.updateRange();
+        this.updateRange();
       },
       showEvent ({ nativeEvent, event }) {
         const open = () => {
